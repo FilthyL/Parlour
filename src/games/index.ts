@@ -4,8 +4,11 @@ import { omaha } from './omaha';
 import { draw } from './draw';
 import { hearts } from './hearts';
 import { spades } from './spades';
+import { euchre } from './euchre';
+import { ohhell } from './ohhell';
+import { whist } from './whist';
 
-export const GAMES: GameDef[] = [holdem, omaha, draw, hearts, spades];
+export const GAMES: GameDef[] = [holdem, omaha, draw, hearts, spades, euchre, ohhell, whist];
 
 export const FAMILIES: { id: Family; blurb: string }[] = [
   { id: 'Poker', blurb: 'Bet, bluff and read the table.' },
