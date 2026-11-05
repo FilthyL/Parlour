@@ -42,9 +42,9 @@ export class App {
   }
 
   private route() {
-    const h = location.hash.replace(/^#\/?/, '');
-    const [page, id] = h.split('/');
-    if (page === 'play' && id && gameById(id)) {
+    // plain hashes only (#holdem opens that game's setup), so links survive any host
+    const id = location.hash.replace(/^#\/?/, '').replace(/^(play|table)[-/]/, '');
+    if (id && gameById(id)) {
       if (!this.unmount) this.go('');
       // a table can only be opened through the setup sheet
       setTimeout(() => this.openGame(gameById(id)!), 0);
@@ -54,7 +54,14 @@ export class App {
   }
 
   private go(hash: string) {
-    if (location.hash.replace(/^#\/?/, '') !== hash) history.replaceState(null, '', '#/' + hash);
+    const want = hash ? '#' + hash : '';
+    if (location.hash !== want) {
+      try {
+        history.replaceState(null, '', want || location.pathname + location.search);
+      } catch {
+        /* sandboxed hosts may refuse; routing is a convenience */
+      }
+    }
   }
 
   private showLobby() {
@@ -69,7 +76,7 @@ export class App {
 
   private startGame(g: GameDef, r: SetupResult) {
     this.unmount?.();
-    this.go('table/' + g.meta.id);
+    this.go(g.meta.id);
     const names = [...CPU_NAMES].sort(() => Math.random() - 0.5);
     const players: PlayerSlot[] = [];
     if (r.mode === 'local') {

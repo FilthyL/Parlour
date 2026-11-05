@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "plates": "node scripts/separate-plates.mjs"
+    "plates": "node scripts/separate-plates.mjs",
+    "glyphs": "node scripts/build-glyphs.mjs",
+    "hosted": "npm run build && node scripts/artifact-page.mjs"
   },
   "license": "MIT",
   "devDependencies": {
