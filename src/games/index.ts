@@ -11,8 +11,12 @@ import { blackjack } from './blackjack';
 import { baccarat } from './baccarat';
 import { gin } from './gin';
 import { rummy } from './rummy';
+import { crazy8 } from './crazy8';
+import { gofish } from './gofish';
+import { oldmaid } from './oldmaid';
+import { war } from './war';
 
-export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist, gin, rummy];
+export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist, gin, rummy, crazy8, gofish, oldmaid, war];
 
 export const FAMILIES: { id: Family; blurb: string }[] = [
   { id: 'Poker', blurb: 'Bet, bluff and read the table.' },
