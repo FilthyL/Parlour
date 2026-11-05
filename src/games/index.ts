@@ -2,8 +2,10 @@ import type { Family, GameDef } from '../core/types';
 import { holdem } from './holdem';
 import { omaha } from './omaha';
 import { draw } from './draw';
+import { hearts } from './hearts';
+import { spades } from './spades';
 
-export const GAMES: GameDef[] = [holdem, omaha, draw];
+export const GAMES: GameDef[] = [holdem, omaha, draw, hearts, spades];
 
 export const FAMILIES: { id: Family; blurb: string }[] = [
   { id: 'Poker', blurb: 'Bet, bluff and read the table.' },
