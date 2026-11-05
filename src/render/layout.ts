@@ -66,7 +66,7 @@ export function computeGeo(W: number, H: number, n: number, viewer: number, opts
       seats.push({
         k,
         ang,
-        plaque: portrait ? { x: Math.min(W * 0.2, 90), y: handY - ch * handScale * 0.62 } : { x: Math.max(110, cx - cw * 5.2), y: handY + ch * 0.1 },
+        plaque: portrait ? { x: Math.min(W * 0.2, 90), y: handY - ch * handScale * 0.62 } : { x: Math.max(100, cx - Math.min(W * 0.3, cw * handScale * 3.6)), y: handY - ch * handScale * 0.5 - 30 },
         hand: { x: cx, y: handY },
         handScale,
         front: onRail(0.6),
