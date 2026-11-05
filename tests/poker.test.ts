@@ -68,3 +68,18 @@ describe("Texas Hold'em", () => {
     expect(checked).toBeGreaterThan(100);
   });
 });
+
+import { omaha } from '../src/games/omaha';
+import { draw } from '../src/games/draw';
+describe('Omaha and Five Card Draw', () => {
+  for (const [def, n] of [[omaha, 2], [omaha, 6], [draw, 2], [draw, 5]] as const) {
+    it(`${def.meta.id}: ${n}-player game finishes and conserves chips`, () => {
+      const { state } = simulate(def, n, 4242 + n, { level: 'easy' });
+      expect(state.players.reduce((a: number, p: any) => a + p.chips, 0)).toBe(1000 * n);
+      expect(state.players.filter((p: any) => p.chips > 0).length).toBe(1);
+    });
+  }
+  it('draw: hand size stays five through the draw', () => {
+    simulate(draw, 4, 9, { level: 'easy', onStep: (st) => st.hole.forEach((h: any[], i: number) => { if (!st.folded[i] && !st.players[i].out) expect(h.length).toBe(5); }) });
+  });
+});
