@@ -141,7 +141,7 @@ export class Runner {
   }
 
   private thinkTime(seat: Seat) {
-    const base = (this.def.meta as any).cpuThink ?? 850;
+    const base = this.def.meta.cpuThink ?? 850;
     return base * (0.65 + this.rng.next() * 0.7) * (seat % 2 ? 1.05 : 0.95);
   }
 }

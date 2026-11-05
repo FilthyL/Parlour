@@ -45,6 +45,8 @@ export interface GameMeta {
   options?: OptionDef[];
   /** typical length of one game, shown in the lobby */
   length?: string;
+  /** base CPU think time in ms (real-time games use a short one) */
+  cpuThink?: number;
 }
 
 export interface Ctx {
@@ -183,4 +185,6 @@ export interface View {
   turn?: Seat;
   fx?: FxEvent[];
   over?: boolean;
+  /** a cribbage pegboard (front and back peg per player) */
+  peg?: { scores: number[]; prev: number[]; target: number };
 }

@@ -18,8 +18,11 @@ import { war } from './war';
 import { president } from './president';
 import { cheat } from './cheat';
 import { sevens } from './sevens';
+import { golf } from './golf';
+import { cribbage } from './cribbage';
+import { ers } from './ers';
 
-export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist, gin, rummy, crazy8, president, cheat, sevens, gofish, oldmaid, war];
+export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist, gin, rummy, crazy8, president, cheat, sevens, gofish, oldmaid, cribbage, golf, war, ers];
 
 export const FAMILIES: { id: Family; blurb: string }[] = [
   { id: 'Poker', blurb: 'Bet, bluff and read the table.' },

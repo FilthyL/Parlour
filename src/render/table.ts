@@ -55,6 +55,7 @@ export class Table {
   private actionH = 76;
   private bannerKey = '';
   private offs: (() => void)[] = [];
+  private pegEl: HTMLDivElement | null = null;
 
   constructor(host: HTMLElement, private ctl: Controller) {
     const r = document.createElement('div');
@@ -254,8 +255,53 @@ export class Table {
     const winners = v.seats.map((s, i) => (s.win ? g.seats[i].plaque : null)).filter(Boolean) as Pt[];
     this.chips.apply(chipTargets, { winners, pace });
     this.drawHud(v, dealing);
+    this.drawPegboard(v);
     this.playFx(v);
     return dealMs;
+  }
+
+  /** Cribbage board: two lanes per player (1–60 up, 61–120 down), holes in fives. */
+  private drawPegboard(v: View) {
+    const g = this.geo!;
+    if (!v.peg) {
+      this.pegEl?.remove();
+      this.pegEl = null;
+      return;
+    }
+    const lanes = [[12, 28], [52, 68]];
+    const yA = (k: number) => 300 - ((k - 1) * 4.4 + Math.floor((k - 1) / 5) * 3.2);
+    const yB = (k: number) => 300 - ((120 - k) * 4.4 + Math.floor((120 - k) / 5) * 3.2);
+    const pos = (p: number, sc: number): [number, number] => {
+      if (sc <= 0) return [lanes[p][0], 312];
+      if (sc >= v.peg!.target) return [40, 12];
+      return sc <= 60 ? [lanes[p][0], yA(sc)] : [lanes[p][1], yB(sc)];
+    };
+    if (!this.pegEl) {
+      const holes: string[] = [];
+      for (const p of [0, 1]) for (let k = 1; k <= 120; k++) {
+        const [x, y] = k <= 60 ? [lanes[p][0], yA(k)] : [lanes[p][1], yB(k)];
+        holes.push(`<circle cx="${x}" cy="${y.toFixed(1)}" r="1.15"/>`);
+      }
+      const el = document.createElement('div');
+      el.className = 'pegboard';
+      el.innerHTML = `<svg viewBox="0 0 80 324" aria-label="Cribbage board">
+        <defs><linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#6b4026"/><stop offset=".5" stop-color="#8a5634"/><stop offset="1" stop-color="#5a341f"/></linearGradient></defs>
+        <rect x="1" y="1" width="78" height="322" rx="14" fill="url(#wood)" stroke="rgba(230,201,138,.45)"/>
+        <g fill="rgba(20,10,4,.75)">${holes.join('')}<circle cx="40" cy="12" r="2"/></g>
+        <text x="40" y="320" text-anchor="middle" font-size="6" fill="rgba(255,240,210,.55)" font-family="Georgia,serif">121</text>
+        ${[0, 1].map((p) => `<g class="peg" id="pb${p}"><circle r="2.4" fill="${p ? '#f1e6d2' : '#e0b456'}" opacity=".55"/></g><g class="peg" id="pf${p}"><circle r="2.9" fill="${p ? '#f6ecdc' : '#f0c35c'}" stroke="rgba(0,0,0,.5)" stroke-width=".6"/></g>`).join('')}
+      </svg>`;
+      this.root.insertBefore(el, this.seatLayer);
+      this.pegEl = el;
+    }
+    const h = Math.min(g.ry * 1.45, 420);
+    Object.assign(this.pegEl.style, { left: `${g.portrait ? 12 : g.cx - g.rx * 0.82 - h * 0.12}px`, top: `${g.cy - h / 2}px`, height: `${h}px`, width: `${(h * 80) / 324}px` });
+    for (const p of [0, 1]) {
+      const [fx2, fy] = pos(p, v.peg.scores[p]);
+      const [bx, by] = pos(p, v.peg.prev[p]);
+      (this.pegEl.querySelector(`#pf${p}`) as SVGGElement).style.transform = `translate(${fx2}px, ${fy}px)`;
+      (this.pegEl.querySelector(`#pb${p}`) as SVGGElement).style.transform = `translate(${bx}px, ${by}px)`;
+    }
   }
 
   private drawSlots(v: View) {
