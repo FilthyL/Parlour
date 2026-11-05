@@ -118,15 +118,29 @@ async function runJob(job: PressJob, emit: (i: PressItem) => void): Promise<void
   if (!w) return runPress(mainThreadEnv(), job, emit);
   const id = ++jobId;
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const fallback = () => {
+      if (settled) return;
+      settled = true;
+      w.removeEventListener('message', onMsg);
+      worker = null; // don't try the worker again
+      runPress(mainThreadEnv(), job, emit).then(resolve, reject);
+    };
+    // if the worker script can't load (e.g. a strict host), print on the main thread
+    w.addEventListener('error', fallback, { once: true });
+    const watchdog = setTimeout(fallback, 15000);
     const onMsg = (e: MessageEvent) => {
+      clearTimeout(watchdog);
+      if (settled) return;
       if (e.data.id !== id) return;
       if (e.data.item) emit(e.data.item);
-      else {
+      else if (e.data.error) {
+        // worker failed (e.g. no WebP encoder): retry on the main thread
+        fallback();
+      } else {
+        settled = true;
         w.removeEventListener('message', onMsg);
-        if (e.data.error) {
-          // worker failed (e.g. no WebP encoder) → retry on main thread
-          runPress(mainThreadEnv(), job, emit).then(resolve, reject);
-        } else resolve();
+        resolve();
       }
     };
     w.addEventListener('message', onMsg);
@@ -147,7 +161,13 @@ export function onDeck(fn: (d: PrintedDeck) => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
-const notify = (d: PrintedDeck) => listeners.forEach((fn) => fn(d));
+const notify = (d: PrintedDeck) => {
+  // publish the back globally: table sprites, the show deck and the lobby all use it
+  const root = document.documentElement.style;
+  if (d.back) root.setProperty('--back', `url("${d.back}")`);
+  root.setProperty('--back-foil', d.backFoil ? `url("${d.backFoil}")` : 'none');
+  listeners.forEach((fn) => fn(d));
+};
 
 export function printDeck(editionId: string, seed: number, onProgress?: (p: number) => void): Promise<PrintedDeck> {
   const key = `v${VERSION}:${editionId}:${seed}`;

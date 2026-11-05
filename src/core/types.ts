@@ -87,7 +87,8 @@ export interface CardView {
 }
 
 export type Slot = 'hand' | 'front' | 'bet' | 'side' | 'meld';
-export type Anchor = { seat: Seat; slot: Slot; i?: number; n?: number } | { x: number; y: number };
+/** Seat-relative, or a point in table units (−1…1). `p` overrides the point on portrait screens. */
+export type Anchor = { seat: Seat; slot: Slot; i?: number; n?: number } | { x: number; y: number; p?: [number, number] };
 
 export interface Zone {
   id: string;

@@ -544,8 +544,9 @@ export function pokerView(s: PokerState, viewer: Seat, gameId: string): View {
   const showAll = s.phase === 'over';
   zones.push({
     id: 'deck',
-    at: { x: 0, y: -0.58 },
+    at: { x: -0.5, y: 0.06, p: [-0.22, -0.34] },
     lay: 'stack',
+    scale: 0.8,
     deck: true,
     count: s.deck.length,
     cards: s.deck.slice(-6).map((c) => ({ id: c.id })),
@@ -553,7 +554,7 @@ export function pokerView(s: PokerState, viewer: Seat, gameId: string): View {
   if (s.cfg.variant !== 'draw')
     zones.push({
       id: 'board',
-      at: { x: 0, y: -0.12 },
+      at: { x: 0, y: 0.06 },
       lay: 'row',
       slots: 5,
       gap: 1.12,
@@ -561,10 +562,10 @@ export function pokerView(s: PokerState, viewer: Seat, gameId: string): View {
     });
   zones.push({
     id: 'muck',
-    at: { x: 0.28, y: -0.6 },
+    at: { x: 0.5, y: 0.06, p: [0.22, -0.34] },
     lay: 'stack',
     count: s.muck.length,
-    scale: 0.8,
+    scale: 0.7,
     cards: s.muck.slice(-5).map((c) => ({ id: c.id, rot: ((c.id.charCodeAt(c.id.length - 1) % 7) - 3) * 4 })),
   });
   const myDraw = s.phase === 'draw' && s.actor === viewer;
@@ -589,7 +590,7 @@ export function pokerView(s: PokerState, viewer: Seat, gameId: string): View {
   const chips = [];
   for (let i = 0; i < s.n; i++) if (s.bet[i] > 0) chips.push({ id: 'bet' + i, at: { seat: i, slot: 'bet' as const }, amount: s.bet[i] });
   const collected = potTotal(s) - s.bet.reduce((a, b) => a + b, 0);
-  if (collected > 0) chips.push({ id: 'pot', at: { x: 0, y: 0.2 }, amount: collected, label: `Pot ${fmt(collected)}` });
+  if (collected > 0) chips.push({ id: 'pot', at: { x: 0, y: 0.36 }, amount: collected, label: `Pot ${fmt(collected)}` });
 
   const buttons: View['buttons'] = [];
   let bet: View['bet'];
