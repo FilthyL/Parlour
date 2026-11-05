@@ -138,7 +138,11 @@ export function zonePoses(g: Geo, z: Zone): { card: CardView; pose: Pose }[] {
     case 'row': {
       const gap = (z.gap ?? 1.08) * cw;
       const slots = Math.max(n, z.slots ?? 0);
-      for (let i = 0; i < n; i++) out.push({ card: z.cards[i], pose: { x: p.x + (i - (slots - 1) / 2) * gap, y: p.y, rot: 0, scale, z: zBase + i } });
+      for (let i = 0; i < n; i++) {
+        const c = z.cards[i];
+        const slot = c.pos != null ? c.pos - (z.center ?? (slots - 1) / 2) : i - (slots - 1) / 2;
+        out.push({ card: c, pose: { x: p.x + slot * gap, y: p.y, rot: c.rot ?? 0, scale, z: zBase + (c.pos ?? i) } });
+      }
       break;
     }
     case 'stack': {
@@ -187,7 +191,8 @@ export function zoneBox(g: Geo, z: Zone) {
   if (z.lay === 'row') {
     const slots = Math.max(z.cards.length, z.slots ?? 0, 1);
     const gap = (z.gap ?? 1.08) * cw;
-    return { x: p.x - ((slots - 1) / 2) * gap - cw / 2, y: p.y - ch / 2, w: (slots - 1) * gap + cw, h: ch, cw, ch, slots, gap };
+    const c0 = z.center ?? (slots - 1) / 2;
+    return { x: p.x - c0 * gap - cw / 2, y: p.y - ch / 2, w: (slots - 1) * gap + cw, h: ch, cw, ch, slots, gap };
   }
   return { x: p.x - cw / 2, y: p.y - ch / 2, w: cw, h: ch, cw, ch, slots: 1, gap: 0 };
 }

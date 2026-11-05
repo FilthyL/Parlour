@@ -264,7 +264,9 @@ export class Table {
     for (const z of v.zones) {
       if (z.slots) {
         const b = zoneBox(g, z);
-        for (let i = z.cards.length; i < b.slots; i++) {
+        const used = new Set(z.cards.map((c, i) => c.pos ?? i));
+        for (let i = 0; i < b.slots; i++) {
+          if (used.has(i)) continue;
           html.push(`<i class="slot" style="left:${b.x + i * b.gap}px;top:${b.y}px;width:${b.cw}px;height:${b.ch}px"></i>`);
         }
       }

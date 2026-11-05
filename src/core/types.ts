@@ -84,6 +84,8 @@ export interface CardView {
   /** seat that played it (trick layout pushes it toward that seat) */
   from?: Seat;
   rot?: number;
+  /** fixed slot in a row (e.g. rank in a Sevens layout); rows centre on zone.center */
+  pos?: number;
 }
 
 export type Slot = 'hand' | 'front' | 'bet' | 'side' | 'meld';
@@ -108,6 +110,8 @@ export interface Zone {
   slots?: number;
   /** spawn point for cards that appear from nowhere */
   deck?: boolean;
+  /** slot index that sits on the anchor, for rows of cards with `pos` */
+  center?: number;
 }
 
 export interface ChipStack {
