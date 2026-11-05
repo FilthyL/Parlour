@@ -95,7 +95,15 @@ export function anchorPt(g: Geo, a: Anchor): { p: Pt; seat?: SeatGeo; slot?: str
   if ('seat' in a) {
     const s = g.seats[a.seat];
     if (!s) return { p: { x: g.cx, y: g.cy } };
-    const p = s[a.slot as keyof SeatGeo] as Pt;
+    let p = s[a.slot as keyof SeatGeo] as Pt;
+    if (a.n && a.n > 1 && a.i != null) {
+      // several zones on one seat (split hands): spread them along the rail
+      const sc = a.slot === 'hand' ? s.handScale : 1;
+      const step = g.cw * sc * (s.k === 0 ? 2.1 : 1.7);
+      const tx = -Math.sin(s.ang), ty = Math.cos(s.ang);
+      const off = (a.i - (a.n - 1) / 2) * step;
+      p = { x: p.x - tx * off, y: p.y - ty * off };
+    }
     return { p, seat: s, slot: a.slot };
   }
   const [x, y] = g.portrait && a.p ? a.p : [a.x, a.y];

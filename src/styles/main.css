@@ -215,7 +215,7 @@ input[type='range'] { accent-color: var(--gold); }
 .felt-mark { position: absolute; left: 50%; top: 70%; transform: translate(-50%, -50%); font: italic 400 clamp(22px, 4vw, 56px) var(--display); color: rgba(243, 235, 221, 0.075); white-space: nowrap; letter-spacing: 0.03em; }
 .slot-layer { position: absolute; inset: 0; z-index: 12; }
 .slot { position: absolute; border-radius: calc(var(--cw) * 0.06); border: 1.5px dashed rgba(230, 201, 138, 0.26); background: rgba(0, 0, 0, 0.1); }
-.zone-label { position: absolute; transform: translateX(-50%); font: 600 11px var(--ui); color: rgba(243, 235, 221, 0.55); }
+.zone-label { position: absolute; transform: translateX(-50%); white-space: nowrap; font: 600 12px/1 var(--ui); color: var(--bone); background: rgba(5, 9, 16, 0.62); border: 1px solid rgba(230, 201, 138, 0.22); padding: 4px 9px; border-radius: 999px; z-index: 1; }
 .zone-hit { position: absolute; background: transparent; border: 0; border-radius: 10px; cursor: pointer; z-index: 2; }
 .zone-hit:hover { box-shadow: 0 0 0 2px rgba(230, 201, 138, 0.7), 0 0 22px rgba(230, 201, 138, 0.35); }
 
