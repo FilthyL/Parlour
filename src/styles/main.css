@@ -344,7 +344,7 @@ input[type='range'] { accent-color: var(--gold); }
 .drawer em { color: var(--bone); }
 .log { padding-left: 20px; margin: 0; font-size: 13.5px; color: var(--bone-2); }
 .log li { padding: 3px 0; }
-.toast { position: absolute; left: 50%; bottom: 120px; z-index: 70; translate: -50% 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s, translate 0.2s; background: #8f1d26; color: #fff4ea; padding: 9px 16px; border-radius: 10px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
+.toast { position: absolute; left: 50%; top: calc(66px + env(safe-area-inset-top, 0px)); z-index: 70; translate: -50% -10px; opacity: 0; pointer-events: none; transition: opacity 0.2s, translate 0.2s; background: #8f1d26; color: #fff4ea; padding: 9px 16px; border-radius: 10px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); }
 .toast.on { opacity: 1; translate: -50% 0; }
 .curtain { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #16263d, #070c15); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .curtain.on { opacity: 1; pointer-events: auto; }
