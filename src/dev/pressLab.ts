@@ -5,6 +5,8 @@ const ed = params.get('ed') ?? 'heritage';
 const seed = Number(params.get('seed') ?? 7);
 const codes = (params.get('codes') ?? 'back,KH,QS,JD,AS,10C,7H').split(',');
 const t0 = performance.now();
+document.body.style.setProperty('--w', (params.get('w') ?? '150') + 'px');
+if (params.get('nolabel')) document.body.classList.add('nolabel');
 const label = document.createElement('div');
 label.className = 'label';
 const e = editionById(ed);

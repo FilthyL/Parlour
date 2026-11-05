@@ -11,7 +11,7 @@
  *   c *= paperShade(x + ox, y + oy)                   (fibres and embossed linen)
  *   c *= edgeShade(distance to card edge)             (a hint of edge wear)
  */
-import type { Edition, RGB } from './editions';
+import type { ClassicEdition as Edition, RGB } from './editions';
 import { TILE, type PaperTile } from './paper';
 import { makeRng } from '../../core/rng';
 

@@ -2,7 +2,8 @@
 import { makePaper } from './paper';
 import { reprintBack, reprintFace } from './printer';
 import { drawBack } from './guilloche';
-import { editionById } from './editions';
+import { editionById, type ClassicEdition, type FlowEdition } from './editions';
+import { composeBack, composeFace } from './composer';
 
 type Ctx2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
@@ -37,17 +38,29 @@ export async function runPress(env: CanvasEnv, job: PressJob, emit: (item: Press
   const paper = makePaper(job.seed);
   const W = job.width, H = job.height;
 
+  if (ed.kind === 'flow') {
+    const e = ed as FlowEdition;
+    const back = composeBack(env.make, W, H, e, paper, job.seed);
+    emit({ kind: 'back', face: await encode(env, back.face, W, H, 0.92), foil: await encode(env, back.foil, W, H, 0.8) });
+    for (const code of job.codes) {
+      const res = composeFace(env.make, W, H, code, e, paper, job.seed);
+      emit({ kind: 'face', code, face: await encode(env, res.face, W, H, 0.92), foil: await encode(env, res.foil, W, H, 0.8) });
+    }
+    return;
+  }
+
+  const ce = ed as ClassicEdition;
   // Back first: face-down cards are what the dealer handles first
   const f = env.make(W, H), a = env.make(W, H);
   drawBack(f.ctx, a.ctx, W, H, job.seed);
   const fd = f.ctx.getImageData(0, 0, W, H).data, ad = a.ctx.getImageData(0, 0, W, H).data;
-  const back = reprintBack(fd, ad, W, H, paper, ed, job.seed);
+  const back = reprintBack(fd, ad, W, H, paper, ce, job.seed);
   emit({ kind: 'back', face: await encode(env, back.face, W, H, 0.92), foil: back.foil ? await encode(env, back.foil, W, H, 0.8) : null });
 
   for (let i = 0; i < job.codes.length; i++) {
     const code = job.codes[i];
     const plates = await env.load(`${job.baseUrl}plates/${code}.png`);
-    const res = reprintFace(plates.data, W, H, paper, ed, job.seed, i);
+    const res = reprintFace(plates.data, W, H, paper, ce, job.seed, i);
     emit({
       kind: 'face',
       code,
