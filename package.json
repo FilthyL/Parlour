@@ -1,0 +1,27 @@
+{
+  "name": "parlour-card-room",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "A card room with 22 classic card games: play the computer, pass and play, or online rooms.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "plates": "node scripts/separate-plates.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "sharp": "^0.35.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@fontsource-variable/bodoni-moda": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "peerjs": "^1.5.5"
+  }
+}
