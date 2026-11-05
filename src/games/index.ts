@@ -9,8 +9,10 @@ import { ohhell } from './ohhell';
 import { whist } from './whist';
 import { blackjack } from './blackjack';
 import { baccarat } from './baccarat';
+import { gin } from './gin';
+import { rummy } from './rummy';
 
-export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist];
+export const GAMES: GameDef[] = [holdem, omaha, draw, blackjack, baccarat, hearts, spades, euchre, ohhell, whist, gin, rummy];
 
 export const FAMILIES: { id: Family; blurb: string }[] = [
   { id: 'Poker', blurb: 'Bet, bluff and read the table.' },
