@@ -245,6 +245,8 @@ input[type='range'] { accent-color: var(--gold); }
 .card.up .lift { transform: translateY(-20%) !important; }
 .card.up .face { box-shadow: 0 0 0 2px var(--gold-2), 0 10px 24px rgba(0, 0, 0, 0.45); }
 .card.playable:not(.mine) { cursor: pointer; }
+.card.playable:not(.mine) .face { box-shadow: 0 0 0 2px var(--gold-2), 0 0 18px rgba(230, 201, 138, 0.55), 0 6px 14px rgba(0, 0, 0, 0.35); }
+.card.playable:not(.mine):hover .lift { transform: translateY(-10%) scale(1.06); }
 .card.playable .face { box-shadow: 0 0 0 1.5px rgba(230, 201, 138, 0.85), 0 6px 16px rgba(0, 0, 0, 0.3); }
 .card.hi .face { box-shadow: 0 0 0 2px var(--gold-2), 0 0 24px rgba(230, 201, 138, 0.55), 0 6px 16px rgba(0, 0, 0, 0.3); }
 .card.dim .face { filter: brightness(0.55) saturate(0.6); }
