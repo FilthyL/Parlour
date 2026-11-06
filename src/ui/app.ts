@@ -13,6 +13,9 @@ import { settings } from '../settings';
 import { mountLobby } from './lobby';
 import { openSetup, type SetupResult } from './setup';
 import { openSettings } from './settingsDialog';
+import { joinRoom, normaliseCode, openRoom } from '../net/transport';
+import { ClientRoom, HostRoom } from '../net/session';
+import { mountRoom, openJoin } from './room';
 
 const CPU_NAMES = ['Ada', 'Bea', 'Cyrus', 'Dario', 'Esme', 'Felix', 'Greta', 'Hugo', 'Iris', 'Jules', 'Kit', 'Lena', 'Milo', 'Nora'];
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -42,8 +45,15 @@ export class App {
   }
 
   private route() {
-    // plain hashes only (#holdem opens that game's setup), so links survive any host
-    const id = location.hash.replace(/^#\/?/, '').replace(/^(play|table)[-/]/, '');
+    // plain hashes only (#holdem opens that game's setup, #join-ABCDE joins a room)
+    const raw = location.hash.replace(/^#\/?/, '');
+    if (raw.startsWith('join-')) {
+      const code = normaliseCode(raw.slice(5));
+      this.showLobby();
+      setTimeout(() => this.join(code), 0);
+      return;
+    }
+    const id = raw.replace(/^(play|table)[-/]/, '');
     if (id && gameById(id)) {
       if (!this.unmount) this.go('');
       // a table can only be opened through the setup sheet
@@ -71,7 +81,89 @@ export class App {
   }
 
   private openGame(g: GameDef) {
-    openSetup(g, (r) => this.startGame(g, r), ['cpu', 'local']);
+    openSetup(g, (r) => (r.mode === 'online' ? this.host(g, r) : this.startGame(g, r)), ['cpu', 'local', 'online']);
+  }
+
+  /** Host an online room for this game. */
+  private async host(g: GameDef, r: SetupResult) {
+    this.unmount?.();
+    this.unmount = null;
+    let room: HostRoom | null = null;
+    let closeTable: (() => void) | null = null;
+    const screen = mountRoom(this.root, { gameName: g.meta.name, isHost: true, lobby: () => room?.lobby() ?? null, mySeat: () => 0, onLeave: () => leave(), onStart: () => start() });
+    screen.status('Opening a room…');
+    const leave = () => {
+      room?.close();
+      closeTable?.();
+      screen.close();
+      this.unmount = null;
+      this.showLobby();
+    };
+    const start = () => {
+      if (!room) return;
+      room.start();
+      screen.close();
+      closeTable = mountTable(this, room.controller(leave), () => {});
+      this.unmount = () => {
+        room?.close();
+        closeTable?.();
+      };
+    };
+    this.unmount = () => {
+      room?.close();
+      screen.close();
+    };
+    try {
+      const t = await openRoom();
+      room = new HostRoom(t, g, { players: r.players, options: r.options, level: r.level, name: r.name });
+      room.onLobby(() => screen.update());
+      screen.status('');
+    } catch (e: any) {
+      screen.status(`Couldn't open a room (${e?.message ?? e}). Online rooms need a site that allows peer-to-peer connections, such as the GitHub Pages version.`, 'error');
+    }
+  }
+
+  /** Join someone else's room. */
+  private join(code: string) {
+    openJoin(
+      code,
+      async (name) => {
+        this.unmount?.();
+        this.unmount = null;
+        let client: ClientRoom | null = null;
+        let closeTable: (() => void) | null = null;
+        const leave = () => {
+          client?.close();
+          closeTable?.();
+          screen.close();
+          this.unmount = null;
+          this.go('');
+          this.showLobby();
+        };
+        const screen = mountRoom(this.root, { gameName: 'Joining…', isHost: false, lobby: () => client?.lobby ?? null, mySeat: () => client?.seat ?? -1, onLeave: () => leave() });
+        screen.status(`Connecting to room ${code}…`);
+        this.unmount = () => leave();
+        try {
+          const t = await joinRoom(code);
+          client = new ClientRoom(t, code, name);
+          client.on(() => {
+            if (!client) return;
+            if (client.status === 'full') return screen.status('That room is full or the game has already started.', 'error');
+            if (client.status === 'closed' && !closeTable) return screen.status('The host closed the room.', 'error');
+            if (client.status === 'playing' && !closeTable && client.game) {
+              screen.close();
+              closeTable = mountTable(this, client.controller(leave), () => {});
+              return;
+            }
+            screen.status('');
+            screen.update();
+          });
+        } catch (e: any) {
+          screen.status(`Couldn't reach room ${code} (${e?.message ?? e}). Check the code, and that the host still has the room open.`, 'error');
+        }
+      },
+      () => this.go(''),
+    );
   }
 
   private startGame(g: GameDef, r: SetupResult) {
@@ -104,6 +196,20 @@ export class App {
       wrap.remove();
     };
   }
+}
+
+// ---------------------------------------------------------------- online rooms
+function mountTable(app: App, ctl: Controller, onLeave: () => void) {
+  void app;
+  const wrap = document.createElement('div');
+  wrap.className = 'table-host';
+  document.getElementById('app')!.appendChild(wrap);
+  const table = new Table(wrap, ctl);
+  return () => {
+    table.destroy();
+    wrap.remove();
+    onLeave();
+  };
 }
 
 function vsCpu(g: GameDef, runner: Runner, leave: () => void): { controller: Controller; dispose?: () => void } {

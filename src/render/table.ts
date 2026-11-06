@@ -22,6 +22,8 @@ export interface Controller {
   submit(a: Action): string | undefined;
   onChange(cb: () => void): () => void;
   hold?<T>(p: Promise<T>): Promise<T>;
+  /** messages that arrive later (online errors, players joining or leaving) */
+  onToast?(cb: (msg: string) => void): () => void;
   leave(): void;
 }
 
@@ -126,6 +128,7 @@ export class Table {
     this.offs.push(onDeck(() => this.cards.refreshArt()));
     this.offs.push(settings.on((s) => (r.dataset.felt = s.felt)));
     this.offs.push(ctl.onChange(() => this.update()));
+    if (ctl.onToast) this.offs.push(ctl.onToast((m) => this.toast(m)));
     this.cards.refreshArt();
     this.update();
   }
