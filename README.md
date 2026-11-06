@@ -22,8 +22,16 @@ chip recordings.
 | Duel | War (2), Egyptian Rat Screw (2–6, real-time) |
 
 Every game has CPU players at three levels (easy, normal, hard) and full
-rules in the in-game rules drawer. Pass and play works for every game except
-Egyptian Rat Screw, which is real-time.
+rules in the in-game rules drawer. Three ways to play:
+
+- **Against the computer**: you plus CPU players.
+- **Pass and play**: several people share one device, with a privacy curtain
+  between turns (every game except Egyptian Rat Screw, which is real-time).
+- **Online room**: the host opens a room and sends the join link; friends play
+  from their own devices over WebRTC (PeerJS). Empty seats are played by the
+  computer, and a player who drops out is covered by the computer until they
+  rejoin. Add `?net=local` to the URL to test rooms between tabs of one
+  browser.
 
 ## Run it
 
