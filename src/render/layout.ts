@@ -1,9 +1,10 @@
 /**
- * Table geometry: seats on an ellipse (the viewer always at the bottom,
+ * Table geometry: seats on a squircle ring (the viewer always at the bottom,
  * play passing clockwise to their left), anchor points per seat, and the
  * card transforms for each zone layout.
  */
 import type { Anchor, CardView, Zone } from '../core/types';
+import { superPoint } from './plate';
 
 export interface Pt {
   x: number;
@@ -34,61 +35,74 @@ export interface Geo {
   H: number;
   cx: number;
   cy: number;
+  /** half-sizes of the seat ring (zones use these as table units) */
   rx: number;
   ry: number;
   cw: number;
   ch: number;
   portrait: boolean;
+  /** the plate (the playing surface) in px */
+  plate: { x: number; y: number; w: number; h: number };
   seats: SeatGeo[];
 }
 
 export const CARD_RATIO = 581 / 400;
+const RING_N = 4; // seats sit on a squircle, the same curve as the plate
 
 export function computeGeo(W: number, H: number, n: number, viewer: number, opts: { topPad: number; actionH: number }): Geo {
   const portrait = H > W * 1.05;
-  const cw = Math.max(38, Math.min(portrait ? W * 0.125 : W * 0.06, H * 0.105, 100));
+  // the board dominates; cards are deliberately small against it
+  const cw = Math.max(34, Math.min(portrait ? W * 0.1 : W * 0.046, H * (portrait ? 0.07 : 0.082), 80));
   const ch = cw * CARD_RATIO;
-  const handScale = portrait ? 1.12 : 1.28;
-  const handY = H - opts.actionH - ch * handScale * 0.5 - 6;
-  const top = opts.topPad + ch * 0.35;
-  const bottom = handY + ch * 0.12;
+  // on phones your own hand stays readable while the board still dominates
+  const handScale = portrait ? 1.6 : 1.22;
+  const margin = Math.max(10, Math.min(W, H) * 0.018);
+  // the plate runs full height; the seat ring lives above the player's hand
+  const plate = { x: margin, y: opts.topPad + 2, w: W - margin * 2, h: H - opts.topPad - 2 - margin };
   const cx = W / 2;
+  const handY = H - opts.actionH - ch * handScale * 0.5 - 6;
+  const top = plate.y + ch * 0.5;
+  const bottom = handY + ch * 0.08;
   const cy = (top + bottom) / 2;
-  const ry = ((bottom - top) / 2) * 0.94;
-  const rx = portrait ? W * 0.43 : Math.min(W * 0.43, ry * 2.05);
+  const ry = ((bottom - top) / 2) * 0.92;
+  const rx = (plate.w / 2) * (portrait ? 0.64 : 0.85);
   const seats: SeatGeo[] = [];
   for (let i = 0; i < n; i++) {
     const k = (i - viewer + n) % n;
-    const ang = Math.PI / 2 + (k * 2 * Math.PI) / n;
-    const ex = Math.cos(ang), ey = Math.sin(ang);
-    const onRail = (f: number) => ({ x: cx + ex * rx * f, y: cy + ey * ry * f });
+    // opponents spread evenly over the arc above you, leaving a gap round your hand
+    const gap = ((portrait ? 42 : 30) * Math.PI) / 180;
+    const ang = k === 0 ? Math.PI / 2 : Math.PI / 2 + gap + ((2 * Math.PI - 2 * gap) * (k - 0.5)) / (n - 1);
+    const onRing = (f: number) => {
+      const [x, y] = superPoint(ang, rx * f, ry * f, RING_N);
+      return { x: cx + x, y: cy + y };
+    };
     if (k === 0) {
       seats.push({
         k,
         ang,
-        plaque: portrait ? { x: Math.min(W * 0.2, 90), y: handY - ch * handScale * 0.62 } : { x: Math.max(78, W * 0.065), y: handY + ch * handScale * 0.2 },
+        plaque: portrait ? { x: Math.min(W * 0.17, 66), y: handY + ch * handScale * 0.32 } : { x: plate.x + Math.max(84, plate.w * 0.075), y: handY + ch * handScale * 0.18 },
         hand: { x: cx, y: handY },
         handScale,
-        front: onRail(0.6),
-        bet: onRail(0.58),
+        front: onRing(0.5),
+        bet: onRing(0.46),
         side: { x: cx + cw * 3.4, y: handY },
-        meld: onRail(0.66),
+        meld: onRing(0.55),
       });
     } else {
       seats.push({
         k,
         ang,
-        plaque: onRail(1.0),
-        hand: onRail(0.78),
-        handScale: portrait ? 0.52 : 0.58,
-        front: onRail(0.6),
-        bet: onRail(0.6),
-        side: onRail(0.92),
-        meld: onRail(0.58),
+        plaque: onRing(1.0),
+        hand: onRing(0.8),
+        handScale: portrait ? 0.56 : 0.62,
+        front: onRing(0.58),
+        bet: onRing(0.56),
+        side: onRing(0.92),
+        meld: onRing(0.56),
       });
     }
   }
-  return { W, H, cx, cy, rx, ry, cw, ch, portrait, seats };
+  return { W, H, cx, cy, rx, ry, cw, ch, portrait, plate, seats };
 }
 
 export function anchorPt(g: Geo, a: Anchor): { p: Pt; seat?: SeatGeo; slot?: string } {

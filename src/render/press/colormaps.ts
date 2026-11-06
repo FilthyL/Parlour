@@ -15,6 +15,8 @@ export const MAPS = {
   // perceptual maps
   magma: cm('#000004', '#1c1044', '#4f127b', '#812581', '#b5367a', '#e55964', '#fb8761', '#fec287', '#fcfdbf'),
   mako: cm('#0b0405', '#2b1c35', '#3e356b', '#3b5998', '#357ba3', '#38a0ab', '#4fc2ad', '#a5e0c0', '#def5e5'),
+  // ultramarine dye, deep ink to the palest wash (the default back)
+  dye: cm('#0b1242', '#111c5e', '#16267f', '#1c32a6', '#2240cf', '#2c4ce4'),
   // light editions
   frost: cm('#f6f2ea', '#e3ebec', '#c7dbe2', '#9fc2d2', '#6f9fbb', '#467ea2', '#2b5f86'),
   blush: cm('#f7f1e8', '#f6e0d6', '#efc2b2', '#e39a87', '#cf6d5e', '#b2453f', '#8b2730'),

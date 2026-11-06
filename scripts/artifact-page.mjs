@@ -16,7 +16,7 @@ const page = `<title>Parlour</title>
 <meta name="description" content="Classic card games with a dealer who does cardistry.">
 ${icon}
 ${css.map((h) => `<link rel="stylesheet" href="${h.replace(/^\.\//, '')}">`).join('\n')}
-<style>html,body{height:100%;background:#0e1a2b}</style>
+<style>html,body{height:100%;background:#e2e5e1}</style>
 <div id="app"></div>
 ${js.map((s) => `<script type="module" src="${s.replace(/^\.\//, '')}"></script>`).join('\n')}
 `;

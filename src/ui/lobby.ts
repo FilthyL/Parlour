@@ -7,6 +7,7 @@ import { currentDeck, onDeck } from '../render/press';
 import { unlockAudio } from '../render/sound';
 import { settings } from '../settings';
 import { icon } from './icons';
+import { plateSVG } from '../render/plate';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -30,7 +31,7 @@ export function mountLobby(host: HTMLElement, open: (g: GameDef) => void, openSe
         </div>
       </div>
       <div class="hero-stage">
-        <div class="mat"><div class="mat-ring"></div></div>
+        <div class="mat"></div>
         <p class="hero-caption" aria-live="polite"></p>
         <p class="hero-note">The dealer knows ${TECHNIQUE_COUNT} flourishes and works a few into every deal.</p>
       </div>
@@ -72,8 +73,16 @@ export function mountLobby(host: HTMLElement, open: (g: GameDef) => void, openSe
   paintFans();
   const offDeck = onDeck(paintFans);
 
-  // ---- the hero performance: cycles through every technique
+  // ---- the hero performance on a plate: cycles through every technique
   const mat = el.querySelector<HTMLDivElement>('.mat')!;
+  const paintPlate = () => {
+    const r = mat.getBoundingClientRect();
+    if (r.width > 0) mat.innerHTML = plateSVG(r.width, r.height, { lines: 8 });
+  };
+  paintPlate();
+  const ro = new ResizeObserver(paintPlate);
+  ro.observe(mat);
+  el.querySelectorAll<HTMLElement>('.fan-plate').forEach((f) => (f.innerHTML = plateSVG(320, 170, { lines: 5 })));
   const cap = el.querySelector<HTMLParagraphElement>('.hero-caption')!;
   const names = [...Object.keys(SHUFFLES), ...Object.keys(FLOURISHES), ...Object.keys(CUTS)];
   let idx = Math.floor(Math.random() * names.length);
@@ -114,6 +123,7 @@ export function mountLobby(host: HTMLElement, open: (g: GameDef) => void, openSe
     alive = false;
     show?.skip();
     io.disconnect();
+    ro.disconnect();
     offDeck();
     el.remove();
   };
@@ -130,7 +140,7 @@ function tile(g: GameDef) {
     })
     .join('');
   return `<button class="tile" data-game="${m.id}">
-    <span class="fan" aria-hidden="true">${fan}</span>
+    <span class="fan" aria-hidden="true"><span class="fan-plate"></span>${fan}</span>
     <span class="tile-text">
       <b>${esc(m.name)}</b>
       <span class="tile-blurb">${esc(m.blurb)}</span>

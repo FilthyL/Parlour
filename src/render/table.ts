@@ -1,16 +1,16 @@
 /**
- * The table: renders a View (felt, seats, cards, chips, HUD), runs the
+ * The table: renders a View (plate, seats, cards, chips, HUD), runs the
  * dealer's cardistry on every fresh deal, plays the sounds, and turns clicks
  * into actions for whatever controller is driving it (local runner,
  * pass-and-play, or an online room).
  */
 import type { Action, Button, GameMeta, View, Zone } from '../core/types';
-import { BRAND } from '../brand';
 import { settings } from '../settings';
 import { CardLayer, type Target } from './cardLayer';
 import { ChipLayer, type ChipTarget } from './chips';
 import { perform, type Performance } from './cardistry';
 import { anchorPt, computeGeo, zoneBox, zonePoses, type Geo, type Pt } from './layout';
+import { plateSVG } from './plate';
 import { currentDeck, onDeck } from './press';
 import { sfx, unlockAudio } from './sound';
 import { icon } from '../ui/icons';
@@ -58,14 +58,16 @@ export class Table {
   private bannerKey = '';
   private offs: (() => void)[] = [];
   private pegEl: HTMLDivElement | null = null;
+  /** the viewer's hand extents, so their plaque can step out of the way */
+  private handBox: { left: number; top: number } | null = null;
 
   constructor(host: HTMLElement, private ctl: Controller) {
     const r = document.createElement('div');
     r.className = 'table-root';
-    r.dataset.felt = settings.get().felt;
+    r.dataset.surface = settings.get().surface;
     r.innerHTML = `
       <div class="room"></div>
-      <div class="tbl"><div class="rail"></div><div class="felt"><div class="felt-line"></div><div class="felt-mark">${esc(BRAND.name)}</div></div></div>
+      <div class="tbl"></div>
       <div class="slot-layer"></div>
       <div class="seat-layer"></div>
       <div class="caption" aria-live="polite"></div>
@@ -126,7 +128,7 @@ export class Table {
     ro.observe(r);
     this.offs.push(() => ro.disconnect());
     this.offs.push(onDeck(() => this.cards.refreshArt()));
-    this.offs.push(settings.on((s) => (r.dataset.felt = s.felt)));
+    this.offs.push(settings.on((s) => (r.dataset.surface = s.surface)));
     this.offs.push(ctl.onChange(() => this.update()));
     if (ctl.onToast) this.offs.push(ctl.onToast((m) => this.toast(m)));
     this.cards.refreshArt();
@@ -217,14 +219,13 @@ export class Table {
     this.cards.setSize(g.cw, g.ch);
     this.root.style.setProperty('--cw', `${g.cw}px`);
     this.root.style.setProperty('--ch', `${g.ch}px`);
-    const rail = Math.max(14, g.cw * 0.26);
-    Object.assign(this.tableEl.style, {
-      left: `${g.cx - g.rx - rail}px`,
-      top: `${g.cy - g.ry - rail}px`,
-      width: `${(g.rx + rail) * 2}px`,
-      height: `${(g.ry + rail) * 2}px`,
-    });
-    this.tableEl.style.setProperty('--rail', `${rail}px`);
+    const pl = g.plate;
+    Object.assign(this.tableEl.style, { left: `${pl.x}px`, top: `${pl.y}px`, width: `${pl.w}px`, height: `${pl.h}px` });
+    const key = `${Math.round(pl.w)}x${Math.round(pl.h)}`;
+    if (this.tableEl.dataset.key !== key) {
+      this.tableEl.dataset.key = key;
+      this.tableEl.innerHTML = plateSVG(pl.w, pl.h);
+    }
     const me = g.seats[v.viewer];
     if (me) this.root.style.setProperty('--prompt-y', `${me.hand.y - g.ch * me.handScale * 0.5 - 44}px`);
   }
@@ -251,6 +252,10 @@ export class Table {
     const deckZone = v.zones.find((z) => z.deck);
     const spawn = deckZone ? anchorPt(g, deckZone.at).p : { x: g.cx, y: g.cy - g.ry * 0.6 };
     const dealMs = this.cards.apply(targets, spawn, dealing ? 105 * pace : 70 * pace, pace);
+    const mine = targets.filter((t) => t.mine);
+    this.handBox = mine.length
+      ? { left: Math.min(...mine.map((t) => t.pose.x - (g.cw * t.pose.scale) / 2)), top: Math.min(...mine.map((t) => t.pose.y - (g.ch * t.pose.scale) / 2)) }
+      : null;
     this.drawSlots(v);
     this.drawSeats(v);
     // chips
@@ -288,11 +293,10 @@ export class Table {
       const el = document.createElement('div');
       el.className = 'pegboard';
       el.innerHTML = `<svg viewBox="0 0 80 324" aria-label="Cribbage board">
-        <defs><linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#6b4026"/><stop offset=".5" stop-color="#8a5634"/><stop offset="1" stop-color="#5a341f"/></linearGradient></defs>
-        <rect x="1" y="1" width="78" height="322" rx="14" fill="url(#wood)" stroke="rgba(230,201,138,.45)"/>
-        <g fill="rgba(20,10,4,.75)">${holes.join('')}<circle cx="40" cy="12" r="2"/></g>
-        <text x="40" y="320" text-anchor="middle" font-size="6" fill="rgba(255,240,210,.55)" font-family="Georgia,serif">121</text>
-        ${[0, 1].map((p) => `<g class="peg" id="pb${p}"><circle r="2.4" fill="${p ? '#f1e6d2' : '#e0b456'}" opacity=".55"/></g><g class="peg" id="pf${p}"><circle r="2.9" fill="${p ? '#f6ecdc' : '#f0c35c'}" stroke="rgba(0,0,0,.5)" stroke-width=".6"/></g>`).join('')}
+        <rect x="1" y="1" width="78" height="322" rx="20" style="fill:var(--panel);stroke:var(--hair)"/>
+        <g style="fill:var(--ink-3)" opacity=".55">${holes.join('')}<circle cx="40" cy="12" r="2"/></g>
+        <text x="40" y="320" text-anchor="middle" font-size="6" style="fill:var(--ink-3);font-family:var(--type);font-weight:700">121</text>
+        ${[0, 1].map((p) => `<g class="peg" id="pb${p}"><circle r="2.4" fill="${p ? '#d6286e' : '#2343e8'}" opacity=".4"/></g><g class="peg" id="pf${p}"><circle r="3" fill="${p ? '#d6286e' : '#2343e8'}" stroke="#fff" stroke-width=".8"/></g>`).join('')}
       </svg>`;
       this.root.insertBefore(el, this.seatLayer);
       this.pegEl = el;
@@ -342,7 +346,9 @@ export class Table {
     v.seats.forEach((s, i) => {
       const sg = g.seats[i];
       if (!sg) return;
-      const p = sg.plaque;
+      let p = sg.plaque;
+      // a wide hand would run under your plaque: lift it above the cards
+      if (sg.k === 0 && this.handBox && this.handBox.left < p.x + 80) p = { x: p.x, y: this.handBox.top - 28 };
       const badges = (s.badges ?? []).map((b) => `<i class="badge b-${b.toLowerCase()}">${esc(b)}</i>`).join('');
       const chips = s.chips != null ? `<span class="chips">${icon('chip')}${fmt(s.chips)}</span>` : '';
       const score = s.score ? `<span class="score">${esc(s.score)}</span>` : '';

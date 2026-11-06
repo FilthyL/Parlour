@@ -330,7 +330,7 @@ function view(s: S, viewer: Seat): View {
   }
   zones.push({ id: 'stock', at: { x: 0.36, y: -0.06, p: [0.3, -0.1] }, lay: 'stack', deck: true, count: s.stock.length, cards: [...s.stock.slice(-5).map((c) => ({ id: c.id })), ...(s.starter ? [{ id: s.starter.id, f: code(s.starter), rot: 6 }] : [])], label: s.starter ? 'Starter' : undefined, act: s.phase === 'cut' && viewer === other(s.dealer) ? { t: 'cut' } : undefined });
   const cribShown = show && s.showStep === 2;
-  zones.push({ id: 'crib', at: { x: -0.36, y: -0.06, p: [-0.3, -0.1] }, lay: cribShown ? 'row' : 'stack', gap: 0.46, scale: cribShown ? 0.78 : 0.8, label: `${s.names[s.dealer]}'s crib`, cards: s.crib.map((c) => ({ id: c.id, f: cribShown ? code(c) : undefined })) });
+  zones.push({ id: 'crib', at: { x: -0.36, y: -0.06, p: [-0.3, -0.1] }, lay: cribShown ? 'row' : 'stack', gap: 0.46, scale: cribShown ? 0.78 : 0.8, label: s.dealer === viewer ? 'Your crib' : `${s.names[s.dealer]}'s crib`, cards: s.crib.map((c) => ({ id: c.id, f: cribShown ? code(c) : undefined })) });
   const buttons: View['buttons'] = [];
   let prompt: string | undefined;
   if (s.phase === 'discard' && !s.discards[viewer] && !s.cpu[viewer]) {

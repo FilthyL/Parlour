@@ -4,7 +4,8 @@ import { randomSeed } from './core/rng';
 export interface Settings {
   edition: string;
   deckSeed: number;
-  felt: 'emerald' | 'sapphire' | 'bordeaux' | 'onyx';
+  /** the playing surface: pale mineral, graphite, or ultramarine */
+  surface: 'fog' | 'ink' | 'dye';
   cardistry: 0 | 1 | 2 | 3; // techniques per deal
   pace: 'relaxed' | 'normal' | 'fast';
   volume: number;
@@ -17,7 +18,7 @@ const KEY = 'parlour.settings.v1';
 const defaults = (): Settings => ({
   edition: 'vortex',
   deckSeed: randomSeed() % 100000,
-  felt: 'emerald',
+  surface: 'fog',
   cardistry: 2,
   pace: 'normal',
   volume: 0.8,
@@ -31,6 +32,8 @@ try {
   const raw = localStorage.getItem(KEY);
   if (raw) cur = { ...cur, ...JSON.parse(raw) };
   else localStorage.setItem(KEY, JSON.stringify(cur));
+  // older saves had a felt colour instead of a surface
+  if (!['fog', 'ink', 'dye'].includes(cur.surface)) cur.surface = 'fog';
 } catch {
   /* private mode: keep defaults */
 }
